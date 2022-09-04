@@ -332,6 +332,10 @@ impl<'a> Toasts<'a> {
                                     .filter(|&expires_at| expires_at <= now)
                                     .is_none()
                             });
+                            // Request UI repaint if there are still toasts
+                            if !toasts.is_empty() {
+                                self.ctx.request_repaint();
+                            }
 
                             ui.ctx().data().insert_temp(self.id, toasts);
                         },
