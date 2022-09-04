@@ -65,13 +65,9 @@
 //!
 #![deny(clippy::all)]
 
-mod utils;
-
 use std::collections::HashMap;
 use std::ops::Add;
 use std::time::Duration;
-#[cfg(target_arch = "wasm32")]
-use crate::utils::wasm::Instant;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
@@ -79,6 +75,11 @@ use egui::{
     Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText,
     Ui, Vec2, WidgetText,
 };
+
+#[cfg(target_arch = "wasm32")]
+use crate::utils::wasm::Instant;
+
+mod utils;
 
 pub const INFO_COLOR: Color32 = Color32::from_rgb(0, 155, 255);
 pub const WARNING_COLOR: Color32 = Color32::from_rgb(255, 212, 0);
@@ -145,13 +146,15 @@ impl Toast {
     }
 }
 
+type CustomToastContents<'a> = HashMap<ToastKind, &'a dyn Fn(&mut Ui, &mut Toast) -> Response>;
+
 pub struct Toasts<'a> {
     ctx: &'a Context,
     id: Id,
     anchor: Pos2,
     direction: Direction,
     align_to_end: bool,
-    custom_toast_contents: HashMap<ToastKind, &'a dyn Fn(&mut Ui, &mut Toast) -> Response>,
+    custom_toast_contents: CustomToastContents<'a>,
 }
 
 impl<'a> Toasts<'a> {
@@ -307,7 +310,7 @@ impl<'a> Toasts<'a> {
 
                             for toast in toasts.iter_mut() {
                                 let toast_response = if let Some(add_contents) =
-                                    self.custom_toast_contents.get_mut(&toast.kind)
+                                self.custom_toast_contents.get_mut(&toast.kind)
                                 {
                                     add_contents(ui, toast)
                                 } else {
