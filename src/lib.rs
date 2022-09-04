@@ -65,9 +65,15 @@
 //!
 #![deny(clippy::all)]
 
+mod utils;
+
 use std::collections::HashMap;
 use std::ops::Add;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(target_arch = "wasm32")]
+use crate::utils::wasm::Instant;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::Instant;
 
 use egui::{
     Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText,
