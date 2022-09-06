@@ -362,12 +362,12 @@ fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> Response {
 
                 let a = |ui: &mut Ui, toast: &mut Toast| {
                     if toast.options.show_icon {
-                        ui.label(RichText::new(icon).color(color));
+                        ui.label(RichText::new(icon).color(color).size(18.0));
                     }
                 };
                 let b = |ui: &mut Ui, toast: &mut Toast| ui.label(toast.text.clone());
                 let c = |ui: &mut Ui, toast: &mut Toast| {
-                    if ui.button("🗙").clicked() {
+                    if ui.button(RichText::new("❌").size(18.0)).clicked() {
                         toast.close();
                     }
                 };
