@@ -71,10 +71,7 @@ use std::time::Duration;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
-use egui::{
-    Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText,
-    Ui, Vec2, WidgetText,
-};
+use egui::{Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText, Ui, Vec2, WidgetText};
 
 #[cfg(target_arch = "wasm32")]
 use crate::utils::wasm::Instant;
@@ -362,12 +359,12 @@ fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> Response {
 
                 let a = |ui: &mut Ui, toast: &mut Toast| {
                     if toast.options.show_icon {
-                        ui.label(RichText::new(icon).color(color).size(18.0));
+                        ui.label(RichText::new(icon).color(color));
                     }
                 };
                 let b = |ui: &mut Ui, toast: &mut Toast| ui.label(toast.text.clone());
                 let c = |ui: &mut Ui, toast: &mut Toast| {
-                    if ui.button(RichText::new("❌").size(18.0)).clicked() {
+                    if ui.button(RichText::new("❌")).clicked() {
                         toast.close();
                     }
                 };
