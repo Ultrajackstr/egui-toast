@@ -76,12 +76,19 @@
 
 use std::collections::HashMap;
 use std::ops::Add;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::Instant;
 
 use egui::{
     Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText,
     Ui, Vec2, WidgetText,
 };
+
+#[cfg(target_arch = "wasm32")]
+use crate::utils::wasm::Instant;
+
+mod utils;
 
 pub const INFO_COLOR: Color32 = Color32::from_rgb(0, 155, 255);
 pub const WARNING_COLOR: Color32 = Color32::from_rgb(255, 212, 0);
@@ -322,7 +329,7 @@ impl Toasts {
 
                             for toast in toasts.iter_mut() {
                                 let toast_response = if let Some(add_contents) =
-                                    self.custom_toast_contents.get_mut(&toast.kind)
+                                self.custom_toast_contents.get_mut(&toast.kind)
                                 {
                                     add_contents(ui, toast)
                                 } else {
@@ -345,6 +352,11 @@ impl Toasts {
                                     .filter(|&expires_at| expires_at <= now)
                                     .is_none()
                             });
+
+                            // Request UI repaint if there are still toasts
+                            if !toasts.is_empty() {
+                                ctx.request_repaint();
+                            }
 
                             ctx.data().insert_temp(id, toasts);
                         },
