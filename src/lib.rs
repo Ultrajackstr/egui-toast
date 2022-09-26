@@ -80,10 +80,7 @@ use std::time::Duration;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
-use egui::{
-    Align, Area, Color32, Context, Direction, Id, Layout, Order, Pos2, Rect, Response, RichText,
-    Ui, Vec2, WidgetText,
-};
+use egui::{Align, Area, Color32, Context, Direction, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Response, RichText, Stroke, Ui, Vec2, WidgetText};
 
 #[cfg(target_arch = "wasm32")]
 use crate::utils::wasm::Instant;
@@ -123,6 +120,8 @@ pub struct ToastOptions {
     pub show_icon: bool,
     /// If defined, the toast is removed when it expires.
     pub expires_at: Option<Instant>,
+    /// Toast creation time,
+    pub created_at: Option<Instant>,
 }
 
 impl Default for ToastOptions {
@@ -130,6 +129,7 @@ impl Default for ToastOptions {
         Self {
             show_icon: true,
             expires_at: None,
+            created_at: None,
         }
     }
 }
@@ -144,6 +144,7 @@ impl ToastOptions {
     pub fn with_duration(duration: impl Into<Option<Duration>>) -> Self {
         Self {
             expires_at: duration.into().map(|duration| Instant::now().add(duration)),
+            created_at: Some(Instant::now()),
             ..Default::default()
         }
     }
@@ -164,6 +165,8 @@ pub struct Toasts {
     align_to_end: bool,
     custom_toast_contents: HashMap<ToastKind, Box<ToastContents>>,
     toasts: Vec<Toast>,
+    progress_bar_color: Color32,
+    progress_bar_width: f32,
 }
 
 impl Default for Toasts {
@@ -181,7 +184,16 @@ impl Toasts {
             align_to_end: false,
             custom_toast_contents: HashMap::new(),
             toasts: Vec::new(),
+            progress_bar_color: Color32::RED,
+            progress_bar_width: 3.0,
         }
+    }
+
+    /// Progress bar options
+    pub fn progress_bar(mut self, color: Color32, width: f32) -> Self {
+        self.progress_bar_color = color;
+        self.progress_bar_width = width;
+        self
     }
 
     /// Starting position for the toasts
@@ -278,6 +290,8 @@ impl Toasts {
             anchor,
             align_to_end,
             direction,
+            progress_bar_color,
+            progress_bar_width,
             ..
         } = *self;
 
@@ -326,14 +340,16 @@ impl Toasts {
                         Layout::from_main_dir_and_cross_align(direction, cross_align),
                         |ui| {
                             ui.spacing_mut().item_spacing = Vec2::splat(5.0);
-
                             for toast in toasts.iter_mut() {
                                 let toast_response = if let Some(add_contents) =
                                 self.custom_toast_contents.get_mut(&toast.kind)
                                 {
                                     add_contents(ui, toast)
                                 } else {
-                                    default_toast_contents(ui, toast)
+                                    let window = default_toast_contents(ui, toast);
+                                    let rect = window.response.rect; // Get the size of the toast window
+                                    add_progress_bar_layer(toast, ctx, rect, progress_bar_color, progress_bar_width); // Add the progress bar layer
+                                    window.response // Show the toast window
                                 };
 
                                 next_area_pos = next_area_pos.min(toast_response.rect.min);
@@ -366,8 +382,8 @@ impl Toasts {
     }
 }
 
-fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> Response {
-    egui::Frame::window(ui.style())
+fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> InnerResponse<()> {
+    let window = egui::Frame::window(ui.style())
         .inner_margin(10.0)
         .show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -402,8 +418,38 @@ fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> Response {
                     c(ui, toast);
                 }
             });
-        })
-        .response
+        });
+    window
+}
+
+// Adds a layer for the progress bar
+fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress_bar_color: Color32, progress_bar_width: f32) {
+    if toast.options.expires_at.is_none() {
+        return;
+    }
+    // Set painter layer
+    let painter = ctx.layer_painter(LayerId::new(Order::Foreground, Id::new("progress_bar")));
+
+    // Calculates the percentage of the toast's lifetime remaining.
+    let mut remaining_time = 0.0;
+    if let Some(expires_at) = toast.options.expires_at {
+        if let Some(created_at) = toast.options.created_at {
+            remaining_time = (expires_at - Instant::now()).as_secs_f32()
+                / (expires_at - created_at).as_secs_f32();
+        }
+    }
+
+    // Draws the progress bar
+    let position_x_remaining = rect.max.x * remaining_time + rect.min.x * (1.0 - remaining_time);
+    let bottom_left = Pos2::new(rect.min.x, rect.max.y);
+    let bottom_right = Pos2::new(position_x_remaining, rect.max.y);
+    painter.line_segment(
+        [
+            bottom_left,
+            bottom_right,
+        ],
+        Stroke::new(progress_bar_width, progress_bar_color),
+    );
 }
 
 pub fn __run_test_ui(mut add_contents: impl FnMut(&mut Ui, &Context)) {

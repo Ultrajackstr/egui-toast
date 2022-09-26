@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use eframe::egui;
-use egui::style::Margin;
 use egui::{Color32, Direction, Frame, Pos2, RichText, Widget};
+use egui::style::Margin;
 
 use egui_toast::{Toast, ToastKind, ToastOptions, Toasts};
 
@@ -25,6 +25,8 @@ struct Demo {
     align_to_end: bool,
     kind: ToastKind,
     show_icon: bool,
+    progress_bar_color: Color32,
+    progress_bar_width: f32,
 }
 
 impl Default for Demo {
@@ -37,6 +39,8 @@ impl Default for Demo {
             align_to_end: false,
             kind: ToastKind::Info,
             show_icon: true,
+            progress_bar_color: Color32::RED,
+            progress_bar_width: 3.0,
         }
     }
 }
@@ -47,7 +51,8 @@ impl eframe::App for Demo {
             .anchor(self.anchor)
             .direction(self.direction)
             .align_to_end(self.align_to_end)
-            .custom_contents(MY_CUSTOM_TOAST, my_custom_toast_contents);
+            .custom_contents(MY_CUSTOM_TOAST, my_custom_toast_contents)
+            .progress_bar(self.progress_bar_color, self.progress_bar_width);
 
         self.options_window(ctx, &mut toasts);
 
@@ -112,6 +117,23 @@ impl Demo {
                         ui.selectable_value(&mut self.kind, ToastKind::Error, "Error");
                         ui.selectable_value(&mut self.kind, ToastKind::Success, "Success");
                     });
+
+                egui::ComboBox::from_label("Progress bar color")
+                    .selected_text(format!("{:?}", self.progress_bar_color))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.progress_bar_color, Color32::RED, "Red");
+                        ui.selectable_value(&mut self.progress_bar_color, Color32::GREEN, "Green");
+                        ui.selectable_value(&mut self.progress_bar_color, Color32::BLUE, "Blue");
+                    });
+
+                ui.horizontal(|ui| {
+                    egui::DragValue::new(&mut self.progress_bar_width)
+                        .fixed_decimals(1)
+                        .speed(0.1)
+                        .clamp_range(0..=20)
+                        .ui(ui);
+                    ui.label("Progress bar width");
+                });
 
                 ui.checkbox(&mut self.show_icon, "Show icon");
 
