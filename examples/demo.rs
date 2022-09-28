@@ -27,6 +27,7 @@ struct Demo {
     show_icon: bool,
     progress_bar_color: Color32,
     progress_bar_width: f32,
+    progress_bar_outline_color: Color32,
 }
 
 impl Default for Demo {
@@ -39,8 +40,9 @@ impl Default for Demo {
             align_to_end: false,
             kind: ToastKind::Info,
             show_icon: true,
-            progress_bar_color: Color32::RED,
+            progress_bar_color: Color32::DARK_GREEN,
             progress_bar_width: 3.0,
+            progress_bar_outline_color: Color32::LIGHT_GRAY,
         }
     }
 }
@@ -52,7 +54,7 @@ impl eframe::App for Demo {
             .direction(self.direction)
             .align_to_end(self.align_to_end)
             .custom_contents(MY_CUSTOM_TOAST, my_custom_toast_contents)
-            .progress_bar(self.progress_bar_color, self.progress_bar_width);
+            .progress_bar(self.progress_bar_color, self.progress_bar_width, self.progress_bar_outline_color);
 
         self.options_window(ctx, &mut toasts);
 
@@ -124,6 +126,14 @@ impl Demo {
                         ui.selectable_value(&mut self.progress_bar_color, Color32::RED, "Red");
                         ui.selectable_value(&mut self.progress_bar_color, Color32::GREEN, "Green");
                         ui.selectable_value(&mut self.progress_bar_color, Color32::BLUE, "Blue");
+                    });
+
+                egui::ComboBox::from_label("Progress bar outline color")
+                    .selected_text(format!("{:?}", self.progress_bar_outline_color))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.progress_bar_outline_color, Color32::RED, "Red");
+                        ui.selectable_value(&mut self.progress_bar_outline_color, Color32::GREEN, "Green");
+                        ui.selectable_value(&mut self.progress_bar_outline_color, Color32::BLUE, "Blue");
                     });
 
                 ui.horizontal(|ui| {

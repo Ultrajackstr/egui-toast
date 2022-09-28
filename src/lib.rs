@@ -168,6 +168,7 @@ pub struct Toasts {
     toasts: Vec<Toast>,
     progress_bar_color: Color32,
     progress_bar_width: f32,
+    progress_bar_outline_color: Color32,
 }
 
 impl Default for Toasts {
@@ -186,14 +187,16 @@ impl Toasts {
             custom_toast_contents: HashMap::new(),
             toasts: Vec::new(),
             progress_bar_color: Color32::DARK_GREEN,
-            progress_bar_width: 3.0,
+            progress_bar_width: 0.0,
+            progress_bar_outline_color: Color32::LIGHT_GRAY,
         }
     }
 
     /// Progress bar options
-    pub fn progress_bar(mut self, color: Color32, width: f32) -> Self {
+    pub fn progress_bar(mut self, color: Color32, width: f32, outline_color: Color32) -> Self {
         self.progress_bar_color = color;
         self.progress_bar_width = width;
+        self.progress_bar_outline_color = outline_color;
         self
     }
 
@@ -293,6 +296,7 @@ impl Toasts {
             direction,
             progress_bar_color,
             progress_bar_width,
+            progress_bar_outline_color,
             ..
         } = *self;
 
@@ -349,7 +353,7 @@ impl Toasts {
                                 } else {
                                     let window = default_toast_contents(ui, toast);
                                     let rect = window.response.rect; // Get the size of the toast window
-                                    add_progress_bar_layer(toast, ctx, rect, progress_bar_color, progress_bar_width); // Add the progress bar layer
+                                    add_progress_bar_layer(toast, ctx, rect, progress_bar_color, progress_bar_width, progress_bar_outline_color); // Add the progress bar layer
                                     window.response // Show the toast window
                                 };
 
@@ -424,7 +428,7 @@ fn default_toast_contents(ui: &mut Ui, toast: &mut Toast) -> InnerResponse<()> {
 }
 
 // Adds a layer for the progress bar
-fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress_bar_color: Color32, progress_bar_width: f32) {
+fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress_bar_color: Color32, progress_bar_width: f32, progress_bar_outline_color: Color32) {
     if toast.options.expires_at.is_none() {
         return;
     }
@@ -451,7 +455,7 @@ fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress
             sw: rounding,
             se: rounding,
         },
-        fill: Color32::LIGHT_GRAY,
+        fill: progress_bar_outline_color,
         stroke: Stroke::new(0.0, Color32::TRANSPARENT),
     }));
 
