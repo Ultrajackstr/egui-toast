@@ -444,10 +444,11 @@ fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress
         }
     }
 
+    let rounding: f32 = progress_bar_width / 2.0; // Rounded corners of the progress bar and outline
+
     //Draws the outline of the progress bar
-    let rounding: f32 = progress_bar_width / 2.0;
     painter.add(Shape::Rect(RectShape {
-        rect: Rect::from_two_pos(Pos2::new(rect.min.x + 10.0, rect.max.y - 2.0 - progress_bar_width),
+        rect: Rect::from_two_pos(Pos2::new(rect.min.x + 10.0, rect.max.y - 2.0 - progress_bar_width), // +/- 10.0 for the margin
                                  Pos2::new(rect.max.x - 10.0, rect.max.y - 2.0)),
         rounding: Rounding {
             nw: rounding,
