@@ -80,7 +80,8 @@ use std::time::Duration;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
-use egui::{Align, Area, Color32, Context, Direction, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Response, RichText, Stroke, Ui, Vec2, WidgetText};
+use egui::{Align, Area, Color32, Context, Direction, Id, InnerResponse, LayerId, Layout, Order, Pos2, Rect, Response, RichText, Rounding, Shape, Stroke, Ui, Vec2, WidgetText};
+use egui::epaint::RectShape;
 
 #[cfg(target_arch = "wasm32")]
 use crate::utils::wasm::Instant;
@@ -184,7 +185,7 @@ impl Toasts {
             align_to_end: false,
             custom_toast_contents: HashMap::new(),
             toasts: Vec::new(),
-            progress_bar_color: Color32::RED,
+            progress_bar_color: Color32::DARK_GREEN,
             progress_bar_width: 3.0,
         }
     }
@@ -439,17 +440,34 @@ fn add_progress_bar_layer(toast: &mut Toast, ctx: &Context, rect: Rect, progress
         }
     }
 
-    // Draws the progress bar
-    let position_x_remaining = rect.max.x * remaining_time + rect.min.x * (1.0 - remaining_time);
-    let bottom_left = Pos2::new(rect.min.x, rect.max.y);
-    let bottom_right = Pos2::new(position_x_remaining, rect.max.y);
-    painter.line_segment(
-        [
-            bottom_left,
-            bottom_right,
-        ],
-        Stroke::new(progress_bar_width, progress_bar_color),
-    );
+    //Draws the outline of the progress bar
+    let rounding: f32 = progress_bar_width / 2.0;
+    painter.add(Shape::Rect(RectShape {
+        rect: Rect::from_two_pos(Pos2::new(rect.min.x + 10.0, rect.max.y - 2.0 - progress_bar_width),
+                                 Pos2::new(rect.max.x - 10.0, rect.max.y - 2.0)),
+        rounding: Rounding {
+            nw: rounding,
+            ne: rounding,
+            sw: rounding,
+            se: rounding,
+        },
+        fill: Color32::LIGHT_GRAY,
+        stroke: Stroke::new(0.0, Color32::TRANSPARENT),
+    }));
+
+    //Draws the progress bar in the outline
+    painter.add(Shape::Rect(RectShape {
+        rect: Rect::from_two_pos(Pos2::new(rect.min.x + 10.0, rect.max.y - 2.0 - progress_bar_width),
+                                 Pos2::new(rect.max.x - 10.0 - (rect.width() - 20.0) * (1.0 - remaining_time), rect.max.y - 2.0)),
+        rounding: Rounding {
+            nw: rounding,
+            ne: rounding,
+            sw: rounding,
+            se: rounding,
+        },
+        fill: progress_bar_color,
+        stroke: Stroke::new(0.0, Color32::TRANSPARENT),
+    }));
 }
 
 pub fn __run_test_ui(mut add_contents: impl FnMut(&mut Ui, &Context)) {
