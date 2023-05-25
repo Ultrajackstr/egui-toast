@@ -13,11 +13,11 @@ categories = ["gui"]
 keywords = ["egui", "toast", "notification"]
 
 [dependencies]
-egui = "0.21.0"
+egui = "0.22.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3.61", features = ["Window", "Performance"] }
+web-sys = { version = "0.3.63", features = ["Window", "Performance"] }
 getrandom = { version = "0.2", features = ["js"] }
 
 [dev-dependencies]
-eframe = { version = "0.21.0", features = ["dark-light"] }
+eframe = { version = "0.22.0" }
