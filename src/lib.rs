@@ -165,7 +165,8 @@ impl Toasts {
             ..
         } = *self;
 
-        let dt = ctx.input(|i| i.unstable_dt) as f64;
+        //let dt = ctx.input(|i| i.unstable_dt) as f64;
+        let dt = ctx.input(|i| i.stable_dt) as f64;
 
         let mut toasts: Vec<Toast> = ctx.data_mut(|d| d.get_temp(id).unwrap_or_default());
         toasts.extend(std::mem::take(&mut self.added_toasts));
